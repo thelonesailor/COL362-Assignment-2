@@ -16,12 +16,18 @@ select player_name from player where batting_hand='Left-hand bat' and 30 > (SELE
 
 --9--
 
+with bs as(
+    SELECT match_id,over_id,ball_id,innings_no,runs_scored+er as runs_scored
+    from(SELECT match_id,over_id,ball_id,innings_no,coalesce(extra_runs, 0) as er,runs_scored
+    FROM batsman_scored  natural left outer join extra_runs)as t6
+)
 select match_id,maximum_runs,player_name from
-(select match_id,overruns2 as maximum_runs,bowler
+(select match_id,over_id,maximum_runs,player_name from
+(select match_id,over_id,overruns2 as maximum_runs,bowler
 from (SELECT t1.match_id,over_id,innings_no,overruns2
-from (select match_id,over_id,innings_no,SUM(runs_scored) as overruns2  from batsman_scored group by match_id,over_id,innings_no order by match_id,over_id) as t1,
+from (select match_id,over_id,innings_no,SUM(runs_scored) as overruns2  from bs group by match_id,over_id,innings_no order by match_id,over_id) as t1,
 (select match_id,MAX(overruns) as mor from (select match_id,over_id,innings_no,SUM(runs_scored) as overruns from batsman_scored group by match_id,over_id,innings_no order by match_id,over_id) as t3 group by match_id) as t2
-where t1.match_id = t2.match_id and t1.overruns2=t2.mor) as t4 natural join (select match_id,over_id,innings_no,bowler from ball_by_ball group by match_id,over_id,innings_no,bowler order by match_id,over_id) as t5 order by match_id asc) as t6,player where player_id=bowler;
+where t1.match_id = t2.match_id and t1.overruns2=t2.mor order by t1.match_id asc,over_id asc) as t4 natural join (select match_id,over_id,innings_no,bowler from ball_by_ball group by match_id,over_id,innings_no,bowler order by match_id asc,over_id asc) as t5 order by match_id asc,over_id asc) as t6,player where player_id=bowler order by match_id asc,over_id asc,player_name asc)as t8;
 
 --11--
 
@@ -33,26 +39,16 @@ select venue from (select venue,num from match natural join (select match_id,cou
 
 --15--
 
-WITH t1 AS (
-    SELECT match_id,over_id,ball_id,innings_no,runs_scored+er as runs
-    from(
-    SELECT match_id,over_id,ball_id,innings_no,coalesce(extra_runs, 0) as er,runs_scored
-    FROM batsman_scored  natural left outer join (select * from extra_runs where extra_type in ('noballs','wides'))as t7)as t6
-),
-     t2 as(
-         SELECT match_id,over_id,ball_id,innings_no
-         FROM wicket_taken
-         where kind_out in ('stumped','caught','lbw','caught and bowled','hit wicket','bowled')
-     ),
-     t3 as (
-         select bowler,sum(runs) as sr
-         from t1 natural join ball_by_ball group by bowler
-     ),
-     t4 as (
-         select bowler,count(bowler) as cb
-         from t2 natural join ball_by_ball group by bowler
-     )
-select player_name from (select player_name,avg from (select bowler,round((sr::numeric/cb),3) as avg from t3 natural join t4) as t5 join player on t5.bowler=player.player_id order by avg asc,player_name asc)as final;
+WITH t1 AS (SELECT match_id,over_id,ball_id,innings_no,runs_scored+er as runs
+    from(SELECT match_id,over_id,ball_id,innings_no,coalesce(extra_runs, 0) as er,runs_scored
+    FROM batsman_scored  natural left outer join extra_runs)as t6),
+     t2 as(SELECT match_id,over_id,ball_id,innings_no FROM wicket_taken),
+     t3 as (select bowler,sum(runs) as sr from t1 natural join ball_by_ball group by bowler),
+     t4 as (select bowler,count(bowler) as cb from t2 natural join ball_by_ball group by bowler),
+     t5 as(select bowler,round((sr::numeric/cb),3) as avg from t3 natural join t4),
+     t6 as(select Min(avg) as minavg from t5),
+     t7 as(select bowler,avg from t5 where avg in (select * from t6))
+select player_name from (select player_name,avg from t7 join player on t7.bowler=player.player_id order by avg asc,player_name asc)as final order by player_name asc;
 
 --17--
 
