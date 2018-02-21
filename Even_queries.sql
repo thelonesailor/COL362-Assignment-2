@@ -1,14 +1,20 @@
 select player_name ,Extract (years from age('2018-02-12',dob)) as player_age from player where Extract (years from age('2018-02-12',dob))>=28 order by player_age desc,player_name asc;
 
-
-select over_id,innings_no, runs_scored
-from (
-	select over_id,innings_no,sum(runs_scored) as runs_scored 
+--removed innings
+select over_id, runs_scored
+from (select over_id,innings_no, sum(runs_scored) as runs_scored
+from ((select over_id,innings_no,sum(runs_scored) as runs_scored 
 from ball_by_ball Natural Join batsman_scored
 group by (match_id,innings_no,over_id)
-having match_id=335987) as accumulated_over_runs
+having match_id=335987)
+union
+(select over_id,innings_no,sum(extra_runs) as runs_scored
+from extra_runs
+group by (match_id,innings_no,over_id)
+having match_id=335987) ) as accu_overscores
+group by(over_id,innings_no)) as accumulated_both
 where runs_scored<=7
-order by runs_scored desc,innings_no asc,over_id asc;
+order by runs_scored desc,over_id asc;
 
 select match_id,team_1,team_2,name as winning_team_name,win_margin
 from match JOIN team
@@ -37,7 +43,7 @@ from(select match_id,man_of_the_match as player_id
 from  match) as match_MoM Natural Join player_match
 group by team_id) as teamid_MoM_count Natural Join team
 order by name asc;
------ what order of venues
+
 select venue
 from (select venue,count(venue) as count_venue
 from(select venue
@@ -47,7 +53,6 @@ group by venue
 order by(count_venue) DESC, venue asc) as venue_count;
 
 --roll vs role
--- from (select *
 -- select distinct 
 select distinct player.player_name as player_name,team.name as name
 from (select player_id,team_id
@@ -70,7 +75,7 @@ select distinct(player_name)
  order by player_name asc;
 
 select player_name
-from (select player_id,avg(innings_run) as batsman_avg
+from (select player_id,round(avg(innings_run),3) as batsman_avg
 from (select striker as player_id,match_id,innings_no,sum(runs_scored) as innings_run
 from (select *
 from (select * 
@@ -80,4 +85,17 @@ group by (player_id,match_id,innings_no)) as player_inning_score
 group by player_id) as player_avg Natural Join player
 order by batsman_avg desc, player_name asc
 limit 10;
---runs scored on every ball ? batsman? 
+
+select country_name
+from (select country_name,round(avg(batsman_avg),3) as batting_avg
+from (select player_id,avg(innings_run) as batsman_avg
+from (select striker as player_id,match_id,innings_no,sum(runs_scored) as innings_run
+from (select *
+from (select * 
+from (select match_id from match) as required_matches 
+Natural Join ball_by_ball ) as match_ball_map Natural Join batsman_scored) as batsman_ball_match
+group by (player_id,match_id,innings_no)) as player_inning_score
+group by player_id) as player_avg Natural Join player
+group by country_name
+order by batting_avg desc,country_name asc) as country_batting_avg
+limit 5;
