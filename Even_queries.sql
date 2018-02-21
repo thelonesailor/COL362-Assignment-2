@@ -30,11 +30,22 @@ from ball_by_ball Natural JOIN batsman_scored
 group by match_id) as match_total
 order by match_id asc;
 
-select player_name,number
+-- select player_name,number
+-- from(
+-- 	select player_out as player_id, count(player_out) as number
+-- 	from (select * from wicket_taken where kind_out='run out') as run_out_table
+-- 	group by (player_out)) as player_run_out Natural Join player
+-- order by number desc,player_name asc;
+
+-- select player_name,number from
+
+--with 0's as well
+select * from
+(select player_name,COALESCE(number,0) as number
 from(
 	select player_out as player_id, count(player_out) as number
 	from (select * from wicket_taken where kind_out='run out') as run_out_table
-	group by (player_out)) as player_run_out Natural Join player
+	group by (player_id)) as player_run_out  Natural Right Outer Join player) as player_run_out
 order by number desc,player_name asc;
 
 select name,number
