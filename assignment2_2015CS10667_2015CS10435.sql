@@ -1,6 +1,8 @@
 --1--
 
-select player_name from player where batting_hand='Left-hand bat' and country_name='England' order by player_name asc;
+select player_name ,Extract (years from age('2018-02-12',dob)) as player_age 
+from (select * from player where bowling_skill='Legbreak googly') as Legbreaks where Extract (years from age('2018-02-12',dob))>=28 
+order by player_age desc,player_name asc;
 
 --2--
 
@@ -33,10 +35,14 @@ select player_name from player join (select striker from ball_by_ball group by s
 
 --6--
 
-select match_id,team_1,team_2,name as winning_team_name,win_margin
+select match_id,team_1,name as team_2,winning_team_name,win_margin
+from (select match_id,name as team_1,team_2,winning_team_name,win_margin
+from (select match_id,team_1,team_2,name as winning_team_name,win_margin
 from match JOIN team
 on team.team_id=match.match_winner
-where win_margin>=60 and win_type='runs'
+where win_margin>=60 and win_type='runs') as complete_ids,team
+where team_1=team_id) as replaced_1,team
+where team_2=team_id
 order by win_margin asc,match_id asc;
 
 --7--
@@ -121,7 +127,7 @@ select player_name from (select player_name,avg from t7 join player on t7.bowler
 
 --16--
 
-select distinct player.player_name as player_name,team.name as name
+select player.player_name as player_name,team.name as name
 from (select player_id,team_id
 from (select * from player_match where roll='CaptainKeeper') as player_match_CK
 Natural Join match
@@ -139,7 +145,7 @@ select player_name,runs_scored from t8,player where player_id=striker  order by 
 
 --18--
 
-select distinct(player_name)
+select (player_name)
  from (select player_id
  from (select *
  from (select *
@@ -150,7 +156,6 @@ select distinct(player_name)
  Natural Join player_match) as player_match_team Natural Join match
  where team_id <> match_winner) as id_final Natural Join player
  order by player_name asc;
-
 --19---
 
 select match_id,venue from match where ((team_1 in (select team_id from team where name='Kolkata Knight Riders') or team_2 in (select team_id from team where name='Kolkata Knight Riders')) and match_winner not in (select team_id from team where name='Kolkata Knight Riders')) order by match_id asc;
