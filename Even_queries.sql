@@ -1,6 +1,8 @@
 --2--
 
-select player_name ,Extract (years from age('2018-02-12',dob)) as player_age from player where Extract (years from age('2018-02-12',dob))>=28 order by player_age desc,player_name asc;
+select player_name ,Extract (years from age('2018-02-12',dob)) as player_age 
+from (select * from player where bowling_skill='Legbreak googly') as Legbreaks where Extract (years from age('2018-02-12',dob))>=28 
+order by player_age desc,player_name asc;
 
 --4--
 
@@ -20,11 +22,14 @@ where runs_scored<=7
 order by runs_scored desc,over_id asc;
 
 --6--
-
-select match_id,team_1,team_2,name as winning_team_name,win_margin
+select match_id,team_1,name as team_2,winning_team_name,win_margin
+from (select match_id,name as team_1,team_2,winning_team_name,win_margin
+from (select match_id,team_1,team_2,name as winning_team_name,win_margin
 from match JOIN team
 on team.team_id=match.match_winner
-where win_margin>=60 and win_type='runs'
+where win_margin>=60 and win_type='runs') as complete_ids,team
+where team_1=team_id) as replaced_1,team
+where team_2=team_id
 order by win_margin asc,match_id asc;
 
 --8--
