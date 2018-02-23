@@ -1,12 +1,12 @@
 --1--
 
-select player_name ,Extract (years from age('2018-02-12',dob)) as player_age 
-from (select * from player where bowling_skill='Legbreak googly') as Legbreaks where Extract (years from age('2018-02-12',dob))>=28 
-order by player_age desc,player_name asc;
+select player_name from player where batting_hand='Left-hand bat' and country_name='England' order by player_name asc;
 
 --2--
 
-select player_name ,Extract (years from age('2018-02-12',dob)) as player_age from player where Extract (years from age('2018-02-12',dob))>=28 order by player_age desc,player_name asc;
+select player_name ,Extract (years from age('2018-02-12',dob)) as player_age
+from (select * from player where bowling_skill='Legbreak googly') as Legbreaks where Extract (years from age('2018-02-12',dob))>=28
+order by player_age desc,player_name asc;
 
 --3--
 
