@@ -65,7 +65,7 @@ order by(count_venue) DESC, venue asc) as venue_count;
 
 --roll vs role
 -- select distinct 
-select distinct player.player_name as player_name,team.name as name
+select player.player_name as player_name,team.name as name
 from (select player_id,team_id
 from (select * from player_match where roll='CaptainKeeper') as player_match_CK
 Natural Join match 
@@ -73,7 +73,8 @@ where match_winner=team_id) as win_CK,player,team
 where win_CK.player_id=player.player_id and win_CK.team_id=team.team_id
 order by player_name asc,name asc;
 
-select distinct(player_name)
+--removed distinct
+select (player_name)
  from (select player_id
  from (select *
  from (select *
