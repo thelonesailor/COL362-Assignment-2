@@ -181,7 +181,7 @@ limit 10;
 
 --21--
 
-select country_name, round((batting_avg/total_player),3) as batting_avg
+with t1 as(select country_name, round((batting_avg/total_player),3) as batting_avg
 from (select country_name,sum(batsman_avg) as batting_avg
 from (select player_id,avg(innings_run) as batsman_avg
 from (select striker as player_id,match_id,innings_no,sum(runs_scored) as innings_run
@@ -193,5 +193,10 @@ group by (player_id,match_id,innings_no)) as player_inning_score
 group by player_id) as player_avg Natural Join player
 group by country_name) as country_total_score Natural Join
 (select country_name,count(player_id) as total_player from player group by country_name) as country_player_count
-order by batting_avg desc,country_name asc
-limit 5;
+order by batting_avg desc,country_name asc)
+select country_name
+from t1 Natural Join (
+select distinct(batting_avg) from 
+t1 order by batting_avg desc
+limit 5) as temp
+-- limit 5;
