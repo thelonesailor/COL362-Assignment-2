@@ -47,7 +47,7 @@ order by win_margin asc,match_id asc;
 
 --7--
 
-select player_name from player where batting_hand='Left-hand bat' and EXTRACT(YEAR from AGE('2018-12-02', dob))<30 order by player_name asc;
+select player_name from player where batting_hand='Left-hand bat' and EXTRACT(YEAR from AGE('2018-02-12', dob))<30 order by player_name asc;
 
 --8--
 
@@ -196,7 +196,7 @@ group by country_name) as country_total_score Natural Join
 order by batting_avg desc,country_name asc)
 select country_name
 from t1 Natural Join (
-select distinct(batting_avg) from 
+select distinct(batting_avg) from
 t1 order by batting_avg desc
 limit 5) as temp
 -- limit 5;
