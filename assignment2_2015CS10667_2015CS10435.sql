@@ -52,7 +52,7 @@ select venue from (select venue,num from match natural join (select match_id,cou
 
 --14--
 
-select venue from (select venue,count(venue) as count_venue from(select venue from match where win_type='wickets') as venue_list group by venue order by(count_venue) DESC, venue asc) as venue_count;
+select venue from (select venue,count(match_id) as total_wins from (select match_id,venue from match  where (match_winner=toss_winner and toss_decision='field') or (match_winner<>toss_winner and toss_decision='bat')) as listed group by venue order by total_wins desc,venue asc) as temp ;
 
 --15--
 
@@ -63,8 +63,6 @@ WITH t1 AS (SELECT match_id,over_id,ball_id,innings_no,runs_scored+er as runs   
 select player.player_name as player_name,team.name as name from (select player_id,team_id from (select * from player_match where roll='CaptainKeeper') as player_match_CK Natural Join match where match_winner=team_id) as win_CK,player,team where win_CK.player_id=player.player_id and win_CK.team_id=team.team_id order by player_name asc,name asc;
 
 --17--
-
--- with t5 as(select match_id,innings_no,striker,sum(runs_scored) as runs from (select * from ball_by_ball natural join batsman_scored) as t1 group by match_id,innings_no,striker),t6 as(select striker,sum(runs) as runs_scored from t5 group by striker),t7 as(select distinct striker from t5 where runs>=50),t8 as(select striker,runs_scored from t6 where striker in (select distinct striker from t5 where runs>=50))select player_name,runs_scored from t8,player where player_id=striker  order by runs_scored desc,player_name asc;
 
 with t5 as(select match_id,innings_no,striker,sum(runs_scored) as runs from (select * from ball_by_ball natural join batsman_scored) as t1 group by match_id,innings_no,striker),t9 as(select match_id,innings_no,striker,runs from t5 where runs>=50)select player_name,runs from t9,player where player_id=striker  order by runs desc,player_name asc;
 
