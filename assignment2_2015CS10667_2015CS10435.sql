@@ -4,9 +4,7 @@ select player_name from player where batting_hand='Left-hand bat' and country_na
 
 --2--
 
-select player_name ,Extract (years from age('2018-02-12',dob)) as player_age
-from (select * from player where bowling_skill='Legbreak googly') as Legbreaks where Extract (years from age('2018-02-12',dob))>=28
-order by player_age desc,player_name asc;
+select player_name ,Extract (years from age('2018-02-12',dob)) as player_age from (select * from player where bowling_skill='Legbreak googly') as Legbreaks where Extract (years from age('2018-02-12',dob))>=28 order by player_age desc,player_name asc;
 
 --3--
 
@@ -14,20 +12,7 @@ select match_id,toss_winner from match where toss_decision='bat' order by match_
 
 --4--
 
-select over_id, runs_scored
-from (select over_id,innings_no, sum(runs_scored) as runs_scored
-from ((select over_id,innings_no,sum(runs_scored) as runs_scored
-from ball_by_ball Natural Join batsman_scored
-group by (match_id,innings_no,over_id)
-having match_id=335987)
-union all
-(select over_id,innings_no,sum(extra_runs) as runs_scored
-from extra_runs
-group by (match_id,innings_no,over_id)
-having match_id=335987) ) as accu_overscores
-group by(over_id,innings_no)) as accumulated_both
-where runs_scored<=7
-order by runs_scored desc,over_id asc;
+select over_id, runs_scored from (select over_id,innings_no, sum(runs_scored) as runs_scored from ((select over_id,innings_no,sum(runs_scored) as runs_scored from ball_by_ball Natural Join batsman_scored group by (match_id,innings_no,over_id) having match_id=335987) union all (select over_id,innings_no,sum(extra_runs) as runs_scored from extra_runs group by (match_id,innings_no,over_id) having match_id=335987) ) as accu_overscores group by(over_id,innings_no)) as accumulated_both where runs_scored<=7 order by runs_scored desc,over_id asc;
 
 --5--
 
@@ -35,15 +20,7 @@ select player_name from player join (select distinct player_out from wicket_take
 
 --6--
 
-select match_id,team_1,name as team_2,winning_team_name,win_margin
-from (select match_id,name as team_1,team_2,winning_team_name,win_margin
-from (select match_id,team_1,team_2,name as winning_team_name,win_margin
-from match JOIN team
-on team.team_id=match.match_winner
-where win_margin>=60 and win_type='runs') as complete_ids,team
-where team_1=team_id) as replaced_1,team
-where team_2=team_id
-order by win_margin asc,match_id asc;
+select match_id,team_1,name as team_2,winning_team_name,win_margin from (select match_id,name as team_1,team_2,winning_team_name,win_margin from (select match_id,team_1,team_2,name as winning_team_name,win_margin from match JOIN team on team.team_id=match.match_winner where win_margin>=60 and win_type='runs') as complete_ids,team where team_1=team_id) as replaced_1,team where team_2=team_id order by win_margin asc,match_id asc;
 
 --7--
 
@@ -52,17 +29,7 @@ select player_name from player where batting_hand='Left-hand bat' and EXTRACT(YE
 --8--
 
 -----innings separate
-select match_id,sum(total_runs) as total_runs
-from (
-	(select match_id,sum(runs_scored) as total_runs
-from ball_by_ball Natural JOIN batsman_scored
-group by match_id)
-union all
-(select match_id,sum(extra_runs) as total_runs
-from extra_runs
-group by match_id)) as match_totalruns
-group by match_id
-order by match_id asc;
+select match_id,sum(total_runs) as total_runs from ( 	(select match_id,sum(runs_scored) as total_runs from ball_by_ball Natural JOIN batsman_scored group by match_id) union all (select match_id,sum(extra_runs) as total_runs from extra_runs group by match_id)) as match_totalruns group by match_id order by match_id asc;
 
 --9--
 
@@ -154,9 +121,9 @@ select (player_name)
  from (select player_id
  from (select *
  from (select *
- from (select striker as player_id,match_id,sum(runs_scored) as players_run_in_match
+ from (select striker as player_id,match_id,innings_no,sum(runs_scored) as players_run_in_match
  from (select * from ball_by_ball Natural Join batsman_scored) as run_per_ball_batsman
- group by (player_id,match_id) ) as player_match_score
+ group by (player_id,match_id,innings_no) ) as player_match_score
  where players_run_in_match>=100) as player_match_century
  Natural Join player_match) as player_match_team Natural Join match
  where team_id <> match_winner) as id_final Natural Join player
