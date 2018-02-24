@@ -64,8 +64,6 @@ select player.player_name as player_name,team.name as name from (select player_i
 
 --17--
 
--- with t5 as(select match_id,innings_no,striker,sum(runs_scored) as runs from (select * from ball_by_ball natural join batsman_scored) as t1 group by match_id,innings_no,striker),t6 as(select striker,sum(runs) as runs_scored from t5 group by striker),t7 as(select distinct striker from t5 where runs>=50),t8 as(select striker,runs_scored from t6 where striker in (select distinct striker from t5 where runs>=50))select player_name,runs_scored from t8,player where player_id=striker  order by runs_scored desc,player_name asc;
-
 with t5 as(select match_id,innings_no,striker,sum(runs_scored) as runs from (select * from ball_by_ball natural join batsman_scored) as t1 group by match_id,innings_no,striker),t9 as(select match_id,innings_no,striker,runs from t5 where runs>=50)select player_name,runs from t9,player where player_id=striker  order by runs desc,player_name asc;
 
 --18--
