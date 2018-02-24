@@ -28,34 +28,15 @@ select player_name from player where batting_hand='Left-hand bat' and EXTRACT(YE
 
 --8--
 
------innings separate
 select match_id,sum(total_runs) as total_runs from ( 	(select match_id,sum(runs_scored) as total_runs from ball_by_ball Natural JOIN batsman_scored group by match_id) union all (select match_id,sum(extra_runs) as total_runs from extra_runs group by match_id)) as match_totalruns group by match_id order by match_id asc;
 
 --9--
 
-with bs as(
-    SELECT match_id,over_id,ball_id,innings_no,(runs_scored+er) as runs_scored
-    from(SELECT match_id,over_id,ball_id,innings_no,coalesce(extra_runs, 0) as er,coalesce(runs_scored, 0)as runs_scored
-    FROM batsman_scored natural full outer join extra_runs)as t6
-)
-select match_id,maximum_runs,player_name from
-(select match_id,over_id,maximum_runs,player_name from
-(select match_id,over_id,overruns2 as maximum_runs,bowler
-from (SELECT t1.match_id as match_id,over_id,innings_no,overruns2
-from (select match_id,over_id,innings_no,SUM(runs_scored) as overruns2  from bs group by match_id,over_id,innings_no order by match_id,over_id) as t1,
-(select match_id,MAX(overruns) as mor from (select match_id,over_id,innings_no,SUM(runs_scored) as overruns from bs group by match_id,over_id,innings_no order by match_id,over_id) as t3 group by match_id) as t2
-where t1.match_id = t2.match_id and t1.overruns2=t2.mor order by t1.match_id asc,over_id asc) as t4 natural join (select match_id,over_id,innings_no,bowler from ball_by_ball group by match_id,over_id,innings_no,bowler order by match_id asc,over_id asc) as t5 order by match_id asc,over_id asc) as t6,player where player_id=bowler order by match_id asc,over_id asc)as t8;
+with bs as(    SELECT match_id,over_id,ball_id,innings_no,(runs_scored+er) as runs_scored    from(SELECT match_id,over_id,ball_id,innings_no,coalesce(extra_runs, 0) as er,coalesce(runs_scored, 0)as runs_scored    FROM batsman_scored natural full outer join extra_runs)as t6)select match_id,maximum_runs,player_name from(select match_id,over_id,maximum_runs,player_name from(select match_id,over_id,overruns2 as maximum_runs,bowlerfrom (SELECT t1.match_id as match_id,over_id,innings_no,overruns2from (select match_id,over_id,innings_no,SUM(runs_scored) as overruns2  from bs group by match_id,over_id,innings_no order by match_id,over_id) as t1,(select match_id,MAX(overruns) as mor from (select match_id,over_id,innings_no,SUM(runs_scored) as overruns from bs group by match_id,over_id,innings_no order by match_id,over_id) as t3 group by match_id) as t2where t1.match_id = t2.match_id and t1.overruns2=t2.mor order by t1.match_id asc,over_id asc) as t4 natural join (select match_id,over_id,innings_no,bowler from ball_by_ball group by match_id,over_id,innings_no,bowler order by match_id asc,over_id asc) as t5 order by match_id asc,over_id asc) as t6,player where player_id=bowler order by match_id asc,over_id asc)as t8;
 
 --10--
 
---with 0's as well
-select * from
-(select player_name,COALESCE(number,0) as number
-from(
-	select player_out as player_id, count(player_out) as number
-	from (select * from wicket_taken where kind_out='run out') as run_out_table
-	group by (player_id)) as player_run_out  Natural Right Outer Join player) as player_run_out
-order by number desc,player_name asc;
+select * from(select player_name,COALESCE(number,0) as numberfrom(	select player_out as player_id, count(player_out) as number	from (select * from wicket_taken where kind_out='run out') as run_out_table	group by (player_id)) as player_run_out  Natural Right Outer Join player) as player_run_outorder by number desc,player_name asc;
 
 --11--
 
@@ -63,12 +44,7 @@ select kind_out as out_type, number from (select kind_out,count(ball_id) as numb
 
 --12--
 
-select name,number
-from(select team_id,count(match_id) as number
-from(select match_id,man_of_the_match as player_id
-from  match) as match_MoM Natural Join player_match
-group by team_id) as teamid_MoM_count Natural Join team
-order by name asc;
+select name,numberfrom(select team_id,count(match_id) as numberfrom(select match_id,man_of_the_match as player_idfrom  match) as match_MoM Natural Join player_matchgroup by team_id) as teamid_MoM_count Natural Join teamorder by name asc;
 
 --13--
 
@@ -76,94 +52,32 @@ select venue from (select venue,num from match natural join (select match_id,cou
 
 --14--
 
-select venue
-from (select venue,count(venue) as count_venue
-from(select venue
-from match
-where win_type='wickets') as venue_list
-group by venue
-order by(count_venue) DESC, venue asc) as venue_count;
+select venuefrom (select venue,count(venue) as count_venuefrom(select venuefrom matchwhere win_type='wickets') as venue_listgroup by venueorder by(count_venue) DESC, venue asc) as venue_count;
 
 --15--
 
-WITH t1 AS (SELECT match_id,over_id,ball_id,innings_no,runs_scored+er as runs
-    from(SELECT match_id,over_id,ball_id,innings_no,coalesce(extra_runs, 0) as er,runs_scored
-    FROM batsman_scored  natural left outer join extra_runs)as t6),
-     t2 as(SELECT match_id,over_id,ball_id,innings_no FROM wicket_taken),
-     t3 as (select bowler,sum(runs) as sr from t1 natural join ball_by_ball group by bowler),
-     t4 as (select bowler,count(bowler) as cb from t2 natural join ball_by_ball group by bowler),
-     t5 as(select bowler,round((sr::numeric/cb),3) as avg from t3 natural join t4),
-     t6 as(select Min(avg) as minavg from t5),
-     t7 as(select bowler,avg from t5 where avg in (select * from t6))
-select player_name from (select player_name,avg from t7 join player on t7.bowler=player.player_id order by avg asc,player_name asc)as final order by player_name asc;
+WITH t1 AS (SELECT match_id,over_id,ball_id,innings_no,runs_scored+er as runs    from(SELECT match_id,over_id,ball_id,innings_no,coalesce(extra_runs, 0) as er,runs_scored    FROM batsman_scored  natural left outer join extra_runs)as t6),     t2 as(SELECT match_id,over_id,ball_id,innings_no FROM wicket_taken),     t3 as (select bowler,sum(runs) as sr from t1 natural join ball_by_ball group by bowler),     t4 as (select bowler,count(bowler) as cb from t2 natural join ball_by_ball group by bowler),     t5 as(select bowler,round((sr::numeric/cb),3) as avg from t3 natural join t4),     t6 as(select Min(avg) as minavg from t5),     t7 as(select bowler,avg from t5 where avg in (select * from t6))select player_name from (select player_name,avg from t7 join player on t7.bowler=player.player_id order by avg asc,player_name asc)as final order by player_name asc;
 
 --16--
 
-select player.player_name as player_name,team.name as name
-from (select player_id,team_id
-from (select * from player_match where roll='CaptainKeeper') as player_match_CK
-Natural Join match
-where match_winner=team_id) as win_CK,player,team
-where win_CK.player_id=player.player_id and win_CK.team_id=team.team_id
-order by player_name asc,name asc;
+select player.player_name as player_name,team.name as namefrom (select player_id,team_idfrom (select * from player_match where roll='CaptainKeeper') as player_match_CKNatural Join matchwhere match_winner=team_id) as win_CK,player,teamwhere win_CK.player_id=player.player_id and win_CK.team_id=team.team_idorder by player_name asc,name asc;
 
 --17--
 
-with t5 as(select match_id,innings_no,striker,sum(runs_scored) as runs from (select * from ball_by_ball natural join batsman_scored) as t1 group by match_id,innings_no,striker),
-t6 as(select striker,sum(runs) as runs_scored from t5 group by striker),
-t7 as(select distinct striker from t5 where runs>=50),
-t8 as(select striker,runs_scored from t6 where striker in (select distinct striker from t5 where runs>=50))
-select player_name,runs_scored from t8,player where player_id=striker  order by runs_scored desc,player_name asc;
+with t5 as(select match_id,innings_no,striker,sum(runs_scored) as runs from (select * from ball_by_ball natural join batsman_scored) as t1 group by match_id,innings_no,striker),t6 as(select striker,sum(runs) as runs_scored from t5 group by striker),t7 as(select distinct striker from t5 where runs>=50),t8 as(select striker,runs_scored from t6 where striker in (select distinct striker from t5 where runs>=50))select player_name,runs_scored from t8,player where player_id=striker  order by runs_scored desc,player_name asc;
 
 --18--
 
-select (player_name)
- from (select player_id
- from (select *
- from (select *
- from (select striker as player_id,match_id,innings_no,sum(runs_scored) as players_run_in_match
- from (select * from ball_by_ball Natural Join batsman_scored) as run_per_ball_batsman
- group by (player_id,match_id,innings_no) ) as player_match_score
- where players_run_in_match>=100) as player_match_century
- Natural Join player_match) as player_match_team Natural Join match
- where team_id <> match_winner) as id_final Natural Join player
- order by player_name asc;
---19---
+select (player_name) from (select player_id from (select * from (select * from (select striker as player_id,match_id,innings_no,sum(runs_scored) as players_run_in_match from (select * from ball_by_ball Natural Join batsman_scored) as run_per_ball_batsman group by (player_id,match_id,innings_no) ) as player_match_score where players_run_in_match>=100) as player_match_century Natural Join player_match) as player_match_team Natural Join match where team_id <> match_winner) as id_final Natural Join player order by player_name asc;
 
-select match_id,venue from match where ((team_1 in (select team_id from team where name='Kolkata Knight Riders') or team_2 in (select team_id from team where name='Kolkata Knight Riders')) and match_winner not in (select team_id from team where name='Kolkata Knight Riders')) order by match_id asc;
+--19--
+
+-select match_id,venue from match where ((team_1 in (select team_id from team where name='Kolkata Knight Riders') or team_2 in (select team_id from team where name='Kolkata Knight Riders')) and match_winner not in (select team_id from team where name='Kolkata Knight Riders')) order by match_id asc;
 
 --20--
 
-select player_name
-from (select player_id,round(avg(innings_run),3) as batsman_avg
-from (select striker as player_id,match_id,innings_no,sum(runs_scored) as innings_run
-from (select *
-from (select *
-from (select match_id from match where season_id=5) as required_matches
-Natural Join ball_by_ball ) as match_ball_map Natural Join batsman_scored) as batsman_ball_match
-group by (player_id,match_id,innings_no)) as player_inning_score
-group by player_id) as player_avg Natural Join player
-order by batsman_avg desc, player_name asc
-limit 10;
+select player_namefrom (select player_id,round(avg(innings_run),3) as batsman_avgfrom (select striker as player_id,match_id,innings_no,sum(runs_scored) as innings_runfrom (select *from (select *from (select match_id from match where season_id=5) as required_matchesNatural Join ball_by_ball ) as match_ball_map Natural Join batsman_scored) as batsman_ball_matchgroup by (player_id,match_id,innings_no)) as player_inning_scoregroup by player_id) as player_avg Natural Join playerorder by batsman_avg desc, player_name asclimit 10;
 
 --21--
 
-with t1 as(select country_name, round((batting_avg/total_player),3) as batting_avg
-from (select country_name,sum(batsman_avg) as batting_avg
-from (select player_id,avg(innings_run) as batsman_avg
-from (select striker as player_id,match_id,innings_no,sum(runs_scored) as innings_run
-from (select *
-from (select *
-from (select match_id from match) as required_matches
-Natural Join ball_by_ball ) as match_ball_map Natural Join batsman_scored) as batsman_ball_match
-group by (player_id,match_id,innings_no)) as player_inning_score
-group by player_id) as player_avg Natural Join player
-group by country_name) as country_total_score Natural Join
-(select country_name,count(player_id) as total_player from player group by country_name) as country_player_count
-order by batting_avg desc,country_name asc)
-select country_name
-from t1 Natural Join (
-select distinct(batting_avg) from
-t1 order by batting_avg desc
-limit 5) as temp;
--- limit 5;
+with t1 as(select country_name, round((batting_avg/total_player),3) as batting_avgfrom (select country_name,sum(batsman_avg) as batting_avgfrom (select player_id,avg(innings_run) as batsman_avgfrom (select striker as player_id,match_id,innings_no,sum(runs_scored) as innings_runfrom (select *from (select *from (select match_id from match) as required_matchesNatural Join ball_by_ball ) as match_ball_map Natural Join batsman_scored) as batsman_ball_matchgroup by (player_id,match_id,innings_no)) as player_inning_scoregroup by player_id) as player_avg Natural Join playergroup by country_name) as country_total_score Natural Join(select country_name,count(player_id) as total_player from player group by country_name) as country_player_countorder by batting_avg desc,country_name asc)select country_namefrom t1 Natural Join (select distinct(batting_avg) fromt1 order by batting_avg desclimit 5) as temp;
