@@ -20,7 +20,7 @@ from ((select over_id,innings_no,sum(runs_scored) as runs_scored
 from ball_by_ball Natural Join batsman_scored
 group by (match_id,innings_no,over_id)
 having match_id=335987)
-union
+union all
 (select over_id,innings_no,sum(extra_runs) as runs_scored
 from extra_runs
 group by (match_id,innings_no,over_id)
@@ -52,11 +52,16 @@ select player_name from player where batting_hand='Left-hand bat' and 30 > (SELE
 --8--
 
 -----innings separate
-select match_id,total_runs
+select match_id,sum(total_runs) as total_runs
 from (
-	select match_id,sum(runs_scored) as total_runs
+	(select match_id,sum(runs_scored) as total_runs
 from ball_by_ball Natural JOIN batsman_scored
-group by match_id) as match_total
+group by match_id)
+union all
+(select match_id,sum(extra_runs) as total_runs
+from extra_runs
+group by match_id)) as match_totalruns
+group by match_id
 order by match_id asc;
 
 --9--
@@ -176,8 +181,8 @@ limit 10;
 
 --21--
 
-select country_name
-from (select country_name,round(avg(batsman_avg),3) as batting_avg
+select country_name, round((batting_avg/total_player),3) as batting_avg
+from (select country_name,sum(batsman_avg) as batting_avg
 from (select player_id,avg(innings_run) as batsman_avg
 from (select striker as player_id,match_id,innings_no,sum(runs_scored) as innings_run
 from (select *
@@ -186,6 +191,7 @@ from (select match_id from match) as required_matches
 Natural Join ball_by_ball ) as match_ball_map Natural Join batsman_scored) as batsman_ball_match
 group by (player_id,match_id,innings_no)) as player_inning_score
 group by player_id) as player_avg Natural Join player
-group by country_name
-order by batting_avg desc,country_name asc) as country_batting_avg
+group by country_name) as country_total_score Natural Join
+(select country_name,count(player_id) as total_player from player group by country_name) as country_player_count
+order by batting_avg desc,country_name asc
 limit 5;
