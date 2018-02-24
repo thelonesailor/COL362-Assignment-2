@@ -198,5 +198,5 @@ select country_name
 from t1 Natural Join (
 select distinct(batting_avg) from
 t1 order by batting_avg desc
-limit 5) as temp
+limit 5) as temp;
 -- limit 5;
