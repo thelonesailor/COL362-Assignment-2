@@ -1,8 +1,8 @@
-copy ball_by_ball from '/home/prakhar10_10/6th semester/COL362/Assignments/COL362-Assignment-2/Data/ball_by_ball.csv' csv header;
-copy batsman_scored from '/home/prakhar10_10/6th semester/COL362/Assignments/COL362-Assignment-2/Data/batsman_scored.csv' csv header;
-copy extra_runs from '/home/prakhar10_10/6th semester/COL362/Assignments/COL362-Assignment-2/Data/extra_runs.csv' csv header;
-copy match from '/home/prakhar10_10/6th semester/COL362/Assignments/COL362-Assignment-2/Data/match.csv' csv header;
-copy player_match from '/home/prakhar10_10/6th semester/COL362/Assignments/COL362-Assignment-2/Data/player_match.csv' csv header;
-copy player from '/home/prakhar10_10/6th semester/COL362/Assignments/COL362-Assignment-2/Data/player.csv' csv header;
-copy team from '/home/prakhar10_10/6th semester/COL362/Assignments/COL362-Assignment-2/Data/team.csv' csv header;
-copy wicket_taken from '/home/prakhar10_10/6th semester/COL362/Assignments/COL362-Assignment-2/Data/wicket_taken.csv' csv header;
+copy ball_by_ball from '/home/prakhar10_10/6th semester/COL362/Assignments/COL362-Assignment-2/Data/ball_by_ball.csv' with csv;
+copy batsman_scored from '/home/prakhar10_10/6th semester/COL362/Assignments/COL362-Assignment-2/Data/batsman_scored.csv' with csv;
+copy extra_runs from '/home/prakhar10_10/6th semester/COL362/Assignments/COL362-Assignment-2/Data/extra_runs.csv' with csv;
+copy match from '/home/prakhar10_10/6th semester/COL362/Assignments/COL362-Assignment-2/Data/match.csv' with csv;
+copy player_match from '/home/prakhar10_10/6th semester/COL362/Assignments/COL362-Assignment-2/Data/player_match.csv' with csv;
+copy player from '/home/prakhar10_10/6th semester/COL362/Assignments/COL362-Assignment-2/Data/player.csv' with csv;
+copy team from '/home/prakhar10_10/6th semester/COL362/Assignments/COL362-Assignment-2/Data/team.csv' with csv;
+copy wicket_taken from '/home/prakhar10_10/6th semester/COL362/Assignments/COL362-Assignment-2/Data/wicket_taken.csv' with csv;
